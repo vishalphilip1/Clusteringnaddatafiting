@@ -104,7 +104,7 @@ def logistic(t, n0, g, t0):
     """Calculates the logistic function with scale factor n0 and growth rate g"""
     f = n0 / (1 + np.exp(-g*(t - t0)))
     return f
-  param, covar = opt.curve_fit(logistic, readdata3["Year"], readdata3["emission"], p0=(1.2e12, 0.03, 1990.0), maxfev=5000)
+   param, covar = opt.curve_fit(logistic, readdata3["Year"], readdata3["emission"], p0=(1.2e12, 0.03, 1990.0), maxfev=5000)
 sigma = np.sqrt(np.diag(covar))
 readdata3["fit"] = logistic(readdata3["Year"], *param)
 readdata3.plot("Year", ["emission", "fit"])
@@ -112,13 +112,4 @@ plt.show()
 print("turning point:", param[2], "+/-", sigma[2])
 print("emission at turning point:", param[0]/1e9, "+/-", sigma[0]/1e9)
 print("emission rate:", param[1], "+/-", sigma[1])
-  
-
-
-
-
-
-
-
-
-
+ 
