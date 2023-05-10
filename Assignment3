@@ -2,12 +2,123 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import MinMaxScaler
+import scipy.optimize as opt
+import numpy as np
+readdata = pd.read_excel('P_Data_Extract_From_World_Development_Indicators.xlsx')
+readdata.dropna(how='all', inplace=True)
+readdata = readdata[~readdata.isin(['..']).any(axis=1)]
+# Filter the DataFrame based on the desired series code
+filtered_df = readdata[readdata['Series Code'] == 'EN.ATM.CO2E.KT']
 
-readdata = pd.read_excel('Data_Extract_FromWorld Development Indicators.xlsx')
-data.dropna(how='all', inplace=True)
-data.replace("..", pd.NA, inplace=True)
-data.dropna(axis=1, how='all', inplace=True)
-data.replace("..", pd.NA, inplace=True)
+# Extract the values of the '2019 [YR2019]' column
+values_2019 = filtered_df['2019 [YR2019]']
+# Filter the DataFrame based on the desired series code
+filtered_df1 = readdata[readdata['Series Code'] == 'EN.ATM.GHGT.KT.CE']
 
-# Drop columns containing NaN
-data.dropna(axis=1, inplace=True)
+# Extract the values of the '2019 [YR2019]' column
+gvalues_2019 = filtered_df['2019 [YR2019]']
+# Combine the values into a DataFrame
+data = pd.DataFrame({'values_2019': values_2019, 'gvalues_2019': gvalues_2019})
+
+# Remove any rows with missing values
+data.dropna(inplace=True)
+
+# Normalize the values using Min-Max scaling
+scaler = MinMaxScaler()
+normalized_data = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
+
+# Create a scatter plot
+plt.scatter(normalized_data['values_2019'], normalized_data['gvalues_2019'])
+k = 3
+
+# Perform K-means clustering
+kmeans = KMeans(n_clusters=k)
+kmeans.fit(normalized_data)
+
+# Get the cluster labels for each data point
+labels = kmeans.labels_
+
+# Add the cluster labels to the normalized_data DataFrame
+normalized_data['Cluster'] = labels
+
+# Visualize the clusters
+plt.scatter(normalized_data['values_2019'], normalized_data['gvalues_2019'], c=labels)
+plt.xlabel('Normalized values_2019')
+plt.ylabel('Normalized gvalues_2019')
+plt.title('K-means Clustering')
+plt.show()
+
+#curve fitting
+readdata3 = pd.read_excel('P_Data_Extract_From_World_Development_Indicatorsuk.xlsx')
+readdata3 = readdata3.drop([1, 2, 3, 4, 5])
+
+
+readdata3 = readdata3.T
+# Assuming your DataFrame is named 'emissions_df'
+readdata3.reset_index(inplace=True)
+readdata3 = readdata3.drop([1, 2, 3,])
+# Delete rows with index 1, 2, and 3
+readdata3 = readdata3.drop([1, 2, 3])
+
+# Reset the index
+readdata3 = readdata3.reset_index(drop=True)
+readdata3 = readdata3.set_axis(readdata3.iloc[0], axis=1)
+readdata3 = readdata3[1:]
+readdata3 = readdata3.rename(columns={'Total greenhouse gas emissions (kt of CO2 equivalent)': 'emission'})
+readdata3 = readdata3.rename(columns={'Series Name': 'Year'})
+
+readdata3.plot("Year","emission")
+plt.show()
+
+def exponential(t, n0, g):
+    # Calculates exponential function with scale factor n0 and growth rate g
+    t = t - 1990
+    f = n0 * np.exp(g * t)
+    return f
+print(type(readdata3["Year"].iloc[1]))
+readdata3["Year"] = pd.to_numeric(readdata3["Year"])
+print(type(readdata3["Year"].iloc[1]))
+param, covar = opt.curve_fit(exponential, readdata3["Year"], readdata3["emission"], p0=(1.2e12, 0.03))
+print("Year", param[0]/1e9)
+print("Year", param[1])
+# Convert the emission column to a NumPy array
+emission_array = readdata3["emission"].to_numpy()
+
+# Define the exponential function
+def exponential(t, n0, g):
+    t = t - 1990
+    f = n0 * np.exp(g * t)
+    return f
+
+# Plot the data
+plt.figure()
+#plt.plot(readdata3["Year"], exponential(readdata3["Year"], 1.2e12, 0.03), label="trial fit")
+#plt.plot(readdata3["Year"], emission_array)
+#plt.xlabel("Year")
+#plt.legend()
+readdata3["fit"] = exponential(readdata3["Year"], *param)
+readdata3.plot("Year", ["emission", "fit"])
+plt.show()
+def logistic(t, n0, g, t0):
+    """Calculates the logistic function with scale factor n0 and growth rate g"""
+    f = n0 / (1 + np.exp(-g*(t - t0)))
+    return f
+  param, covar = opt.curve_fit(logistic, readdata3["Year"], readdata3["emission"], p0=(1.2e12, 0.03, 1990.0), maxfev=5000)
+sigma = np.sqrt(np.diag(covar))
+readdata3["fit"] = logistic(readdata3["Year"], *param)
+readdata3.plot("Year", ["emission", "fit"])
+plt.show()
+print("turning point:", param[2], "+/-", sigma[2])
+print("emission at turning point:", param[0]/1e9, "+/-", sigma[0]/1e9)
+print("emission rate:", param[1], "+/-", sigma[1])
+  
+
+
+
+
+
+
+
+
+
