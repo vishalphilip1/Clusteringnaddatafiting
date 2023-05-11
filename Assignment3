@@ -96,17 +96,17 @@ plt.scatter(
     data_with_clusters1[data_with_clusters1['Cluster'] == 0]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
                         ['Cluster'] == 0]['greenhouse_2019'],
-    c='red', cmap='rainbow', s=100, label='Cluster 1')
+     s=100, label='Cluster 0')
 plt.scatter(
     data_with_clusters1[data_with_clusters1['Cluster'] == 1]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
                         ['Cluster'] == 1]['greenhouse_2019'],
-    c='blue', cmap='rainbow', s=100, label='Cluster 2')
+    s=100, label='Cluster 1')
 plt.scatter(data_with_clusters1[
     data_with_clusters1['Cluster'] == 2]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
                         ['Cluster'] == 2]['greenhouse_2019'],
-    c='green', cmap='rainbow', s=100, label='Cluster 3')
+     s=100, label='Cluster 2')
 plt.legend()
 # Plot centroids
 plt.scatter(centroids1[:, 0], centroids1[:, 1], marker='*', s=50, c='black',
@@ -123,20 +123,19 @@ plt.scatter(data_with_clusters2[data_with_clusters2
                                 ['Cluster'] == 0]['carbon_1990'],
             data_with_clusters2[data_with_clusters2['Cluster'] == 0]
             ['emission_1990'],
-            c='red',
-            label='Cluster 1', cmap='rainbow', s=100)
+            label='Cluster 0', s=100)
 
 plt.scatter(data_with_clusters2[data_with_clusters2['Cluster'] == 1]
             ['carbon_1990'],
             data_with_clusters2[data_with_clusters2
                                 ['Cluster'] == 1]['emission_1990'],
-            c='green', label='Cluster 2', cmap='rainbow', s=100)
+            label='Cluster 1', s=100)
 
 plt.scatter(data_with_clusters2[data_with_clusters2
                                 ['Cluster'] == 2]['carbon_1990'],
             data_with_clusters2[data_with_clusters2
                                 ['Cluster'] == 2]['emission_1990'],
-            c='blue', label='Cluster 3', cmap='rainbow', s=100)
+            label='Cluster 2', s=100)
 
 # Plot centroids
 plt.scatter(centroids2[:, 0], centroids2[:, 1], marker='*', s=50, c='black',
@@ -263,13 +262,9 @@ print("turning point:", param[2], "+/-", sigma[2])
 print("emission at turning point:", param[0]/1e9, "+/-", sigma[0]/1e9)
 print("emission rate:", param[1], "+/-", sigma[1])
 
-#predicting the years
+# predicting the years
 year = np.arange(1990, 2030)
 forecast = logistic(year, *param)
-
-'''
-Visualizing  the values of the student enrolment from your 1960 to 2030 with plot
-'''
 plt.figure()
 plt.plot(readdata3["Year"], readdata3["emission"], label="Greenhouse Emission")
 plt.plot(year, forecast, label="forecast")
@@ -286,6 +281,7 @@ plt.figure()
 plt.plot(readdata3["Year"], readdata3["emission"], label="Greenhouse Emission")
 plt.plot(year, forecast, label="forecast")
 plt.fill_between(year, low, up, color="greenyellow", alpha=0.7)
+plt.title('Best fiting functiong including confidence range')
 plt.xlabel("Year")
 plt.ylabel("Green House Emission")
 plt.legend()
