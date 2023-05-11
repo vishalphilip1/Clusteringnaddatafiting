@@ -1,7 +1,7 @@
 """
 Created on Wed May 10 08:30:31 2023.
 
-@author: acer
+@author: Vishal Philip
 """
 
 
@@ -11,26 +11,34 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
 import scipy.optimize as opt
 import numpy as np
+import err_ranges as err
 
 
 def read_data(filename):
+    """Read data from an Excel file and performs data cleaning."""
     data = pd.read_excel(filename)
     data.dropna(how='all', inplace=True)
     data = data[~data.isin(['..']).any(axis=1)]
     return data
 
+
 def transpose_data(data):
+    """Transpose the dataframe."""
     transposed_data = data.transpose()
     transposed_data.dropna(inplace=True)
     return transposed_data
 
+
 def normalize_data(data):
+    """Normalise the data."""
     scaler = MinMaxScaler()
     normalized_data = pd.DataFrame(
         scaler.fit_transform(data), columns=data.columns)
     return normalized_data
 
+
 def cluster_data(data, features, n_clusters):
+    """To perform Cluster."""
     x = data[features]
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(x)
@@ -41,12 +49,26 @@ def cluster_data(data, features, n_clusters):
     return data_with_clusters, centroids
 
 
+def exponential(t, n0, g):
+    """Calculate exponential function with scale factor."""
+    t = t - 1990
+    f = n0 * np.exp(g * t)
+    return f
+
+
+def logistic(t, n0, g, t0):
+    """Calculate the logistic function."""
+    f = n0 / (1 + np.exp(-g*(t - t0)))
+    return f
+
+
 # Read and preprocess data for 1990
 readdata1990 = read_data(
     'P_Data_Extract_From_World_Development_Indicators1990.xlsx')
 
 transposed_data1990 = transpose_data(readdata1990)
 
+# filter the data for the year 1990
 filtered_dfc1990 = readdata1990[
     readdata1990['Series Code'] == 'EN.ATM.CO2E.KT']
 filtered_dfg1990 = readdata1990[
@@ -67,6 +89,8 @@ data2.dropna(inplace=True)
 # Read and preprocess data for 2019
 readdata2019 = read_data(
     'P_Data_Extract_From_World_Development_Indicators.xlsx')
+
+# filter the data for the year 2019
 filtered_dfc2019 = readdata2019[readdata2019[
     'Series Code'] == 'EN.ATM.CO2E.KT']
 filtered_dfg2019 = readdata2019[readdata2019[
@@ -96,7 +120,7 @@ plt.scatter(
     data_with_clusters1[data_with_clusters1['Cluster'] == 0]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
                         ['Cluster'] == 0]['greenhouse_2019'],
-     s=100, label='Cluster 0')
+    s=100, label='Cluster 0')
 plt.scatter(
     data_with_clusters1[data_with_clusters1['Cluster'] == 1]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
@@ -106,18 +130,18 @@ plt.scatter(data_with_clusters1[
     data_with_clusters1['Cluster'] == 2]['carbon_2019'],
     data_with_clusters1[data_with_clusters1
                         ['Cluster'] == 2]['greenhouse_2019'],
-     s=100, label='Cluster 2')
+    s=100, label='Cluster 2')
 plt.legend()
+
 # Plot centroids
 plt.scatter(centroids1[:, 0], centroids1[:, 1], marker='*', s=50, c='black',
             label='Centroids')  # Plot centroids
 plt.title('K-Means Clustering for the Year 2019')
 plt.xlabel('Carbon Emission')
-plt.ylabel('Greenhouse House Emission')
+plt.ylabel('Greenhouse Emission')
 plt.legend()
 plt.show()
 
-# Plot the scatter plot with clusters for 1990 data
 # Plot the scatter plot with clusters for 1990 data
 plt.scatter(data_with_clusters2[data_with_clusters2
                                 ['Cluster'] == 0]['carbon_1990'],
@@ -147,7 +171,6 @@ plt.ylabel('GreehHouse Emission')
 
 # Add legend
 plt.legend()
-
 plt.show()
 
 # Filter data points for cluster 1 in 2019 data
@@ -175,28 +198,19 @@ readdata3 = readdata3.drop([1, 2, 3, 4, 5])
 
 
 readdata3 = readdata3.T
-# Assuming your DataFrame is named 'emissions_df'
 readdata3.reset_index(inplace=True)
-
-
 readdata3 = readdata3.drop([1, 2, 3, ])
-
 
 # Reset the index
 readdata3 = readdata3.reset_index(drop=True)
-
 
 # Delete rows with index 1, 2, and 3
 readdata3 = readdata3.drop([1, 2, 3])
 
 # Reset the index
 readdata3 = readdata3.reset_index(drop=True)
-
-
 readdata3 = readdata3.set_axis(readdata3.iloc[0], axis=1)
 readdata3 = readdata3[1:]
-
-
 readdata3 = readdata3.rename(columns={
     'Total greenhouse gas emissions (kt of CO2 equivalent)': 'emission'})
 readdata3 = readdata3.rename(columns={'Series Name': 'Year'})
@@ -206,15 +220,6 @@ plt.xlabel('Year')
 plt.ylabel('Greenhouse Emission')
 plt.title('Total Green House Emission of UK ')
 plt.show()
-
-
-def exponential(t, n0, g):
-    # Calculates exponential function with scale factor n0 and growth rate g
-    t = t - 1990
-    f = n0 * np.exp(g * t)
-    return f
-
-
 print(type(readdata3["Year"].iloc[1]))
 readdata3["Year"] = pd.to_numeric(readdata3["Year"])
 print(type(readdata3["Year"].iloc[1]))
@@ -225,13 +230,6 @@ print("Year", param[1])
 
 # Convert the emission column to a NumPy array
 emission_array = readdata3["emission"].to_numpy()
-
-# Define the exponential function
-#def exponential(t, n0, g):
-#    t = t - 1990
- #   f = n0 * np.exp(g * t)
- #   return f
-
 plt.figure()
 readdata3["fit"] = exponential(readdata3["Year"], *param)
 readdata3.plot("Year", ["emission", "fit"])
@@ -239,14 +237,6 @@ plt.title(" Data fiting with n0 * np.exp(g * t)")
 plt.xlabel('Year')
 plt.ylabel('Greenhouse Emission')
 plt.show()
-
-def logistic(t, n0, g, t0):
-    """Calculates the logistic function with 
-    scale factor n0 and growth rate g"""
-    f = n0 / (1 + np.exp(-g*(t - t0)))
-    return f
-
-
 param, covar = opt.curve_fit(logistic,
                              readdata3["Year"], readdata3["emission"],
                              p0=(1.2e12, 0.03, 1990.0), maxfev=100000)
@@ -257,7 +247,6 @@ plt.title("Data fiting with n0 / (1 + np.exp(-g*(t - t0)))")
 plt.xlabel('Year')
 plt.ylabel('Greenhouse Emission')
 plt.show()
-
 print("turning point:", param[2], "+/-", sigma[2])
 print("emission at turning point:", param[0]/1e9, "+/-", sigma[0]/1e9)
 print("emission rate:", param[1], "+/-", sigma[1])
@@ -273,9 +262,6 @@ plt.xlabel("Year")
 plt.ylabel("Green House Emission")
 plt.legend()
 plt.show()
-
-import err_ranges as err
-
 low, up = err.err_ranges(year, logistic, param, sigma)
 plt.figure()
 plt.plot(readdata3["Year"], readdata3["emission"], label="Greenhouse Emission")
