@@ -35,9 +35,10 @@ def cluster_data(data, features, n_clusters):
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(x)
     identified_clusters = kmeans.predict(x)
+    centroids = kmeans.cluster_centers_  # Get the centroids of each cluster
     data_with_clusters = data.copy()
     data_with_clusters['Cluster'] = identified_clusters
-    return data_with_clusters
+    return data_with_clusters, centroids
 
 
 # Read and preprocess data for 1990
@@ -83,26 +84,89 @@ data1.dropna(subset=['carbon_2019', 'greenhouse_2019',
 normalized_data1 = normalize_data(data1[['carbon_2019', 'greenhouse_2019']])
 normalized_data2 = normalize_data(data2[['carbon_1990', 'emission_1990']])
 
-# Cluster the data
-data_with_clusters1 = cluster_data(data1, [
-    'carbon_2019', 'greenhouse_2019'], 3)
-data_with_clusters2 = cluster_data(data2, ['carbon_1990', 'emission_1990'], 3)
+# Cluster the data and obtain centroids
+data_with_clusters1, centroids1 = cluster_data(data1, ['carbon_2019',
+                                                       'greenhouse_2019'], 3)
+data_with_clusters2, centroids2 = cluster_data(data2, ['carbon_1990',
+                                                       'emission_1990'], 3)
 
 # Plot the scatter plot with clusters for 2019 data
-plt.scatter(data_with_clusters1['carbon_2019'],
-            data_with_clusters1['greenhouse_2019'],
-            c=data_with_clusters1['Cluster'],
-            cmap='rainbow')
-plt.title('K- Means Clustering for the Year 2019')
+
+plt.scatter(
+    data_with_clusters1[data_with_clusters1['Cluster'] == 0]['carbon_2019'],
+    data_with_clusters1[data_with_clusters1
+                        ['Cluster'] == 0]['greenhouse_2019'],
+    c='red', cmap='rainbow', s=100, label='Cluster 1')
+plt.scatter(
+    data_with_clusters1[data_with_clusters1['Cluster'] == 1]['carbon_2019'],
+    data_with_clusters1[data_with_clusters1
+                        ['Cluster'] == 1]['greenhouse_2019'],
+    c='blue', cmap='rainbow', s=100, label='Cluster 2')
+plt.scatter(data_with_clusters1[
+    data_with_clusters1['Cluster'] == 2]['carbon_2019'],
+    data_with_clusters1[data_with_clusters1
+                        ['Cluster'] == 2]['greenhouse_2019'],
+    c='green', cmap='rainbow', s=100, label='Cluster 3')
+plt.legend()
+# Plot centroids
+plt.scatter(centroids1[:, 0], centroids1[:, 1], marker='*', s=50, c='black',
+            label='Centroids')  # Plot centroids
+plt.title('K-Means Clustering for the Year 2019')
+plt.xlabel('Carbon Emission')
+plt.ylabel('Greenhouse House Emission')
+plt.legend()
 plt.show()
 
 # Plot the scatter plot with clusters for 1990 data
-plt.scatter(data_with_clusters2['carbon_1990'],
-            data_with_clusters2['emission_1990'],
-            c=data_with_clusters2['Cluster'],
-            cmap='rainbow')
-plt.title('K- Means Clustering for the Year 1990')
+# Plot the scatter plot with clusters for 1990 data
+plt.scatter(data_with_clusters2[data_with_clusters2
+                                ['Cluster'] == 0]['carbon_1990'],
+            data_with_clusters2[data_with_clusters2['Cluster'] == 0]
+            ['emission_1990'],
+            c='red',
+            label='Cluster 1', cmap='rainbow', s=100)
+
+plt.scatter(data_with_clusters2[data_with_clusters2['Cluster'] == 1]
+            ['carbon_1990'],
+            data_with_clusters2[data_with_clusters2
+                                ['Cluster'] == 1]['emission_1990'],
+            c='green', label='Cluster 2', cmap='rainbow', s=100)
+
+plt.scatter(data_with_clusters2[data_with_clusters2
+                                ['Cluster'] == 2]['carbon_1990'],
+            data_with_clusters2[data_with_clusters2
+                                ['Cluster'] == 2]['emission_1990'],
+            c='blue', label='Cluster 3', cmap='rainbow', s=100)
+
+# Plot centroids
+plt.scatter(centroids2[:, 0], centroids2[:, 1], marker='*', s=50, c='black',
+            label='Centroids')
+
+plt.title('K-Means Clustering for the Year 1990')
+plt.xlabel('Carbon Emission')
+plt.ylabel('GreehHouse Emission')
+
+# Add legend
+plt.legend()
+
 plt.show()
+
+# Filter data points for cluster 1 in 2019 data
+cluster1_data_20190 = data_with_clusters1[data_with_clusters1['Cluster'] == 0]
+cluster1_data_20191 = data_with_clusters1[data_with_clusters1['Cluster'] == 1]
+cluster1_data_20192 = data_with_clusters1[data_with_clusters1['Cluster'] == 2]
+print(cluster1_data_20190)
+print(cluster1_data_20191)
+print(cluster1_data_20192)
+
+# Filter data points for cluster 1 in 2019 data
+cluster2_data_20190 = data_with_clusters2[data_with_clusters2['Cluster'] == 0]
+cluster2_data_20191 = data_with_clusters2[data_with_clusters2['Cluster'] == 1]
+cluster2_data_20192 = data_with_clusters2[data_with_clusters2['Cluster'] == 2]
+
+print(cluster2_data_20190)
+print(cluster2_data_20191)
+print(cluster2_data_20192)
 
 
 readdata3 = pd.read_excel(
@@ -139,6 +203,9 @@ readdata3 = readdata3.rename(columns={
 readdata3 = readdata3.rename(columns={'Series Name': 'Year'})
 
 readdata3.plot("Year", "emission")
+plt.xlabel('Year')
+plt.ylabel('Greenhouse Emission')
+plt.title('Total Green House Emission of UK ')
 plt.show()
 
 
@@ -161,14 +228,17 @@ print("Year", param[1])
 emission_array = readdata3["emission"].to_numpy()
 
 # Define the exponential function
-def exponential(t, n0, g):
-    t = t - 1990
-    f = n0 * np.exp(g * t)
-    return f
+#def exponential(t, n0, g):
+#    t = t - 1990
+ #   f = n0 * np.exp(g * t)
+ #   return f
 
 plt.figure()
 readdata3["fit"] = exponential(readdata3["Year"], *param)
 readdata3.plot("Year", ["emission", "fit"])
+plt.title(" Data fiting with n0 * np.exp(g * t)")
+plt.xlabel('Year')
+plt.ylabel('Greenhouse Emission')
 plt.show()
 
 def logistic(t, n0, g, t0):
@@ -184,21 +254,39 @@ param, covar = opt.curve_fit(logistic,
 sigma = np.sqrt(np.diag(covar))
 readdata3["fit"] = logistic(readdata3["Year"], *param)
 readdata3.plot("Year", ["emission", "fit"])
+plt.title("Data fiting with n0 / (1 + np.exp(-g*(t - t0)))")
+plt.xlabel('Year')
+plt.ylabel('Greenhouse Emission')
 plt.show()
+
 print("turning point:", param[2], "+/-", sigma[2])
 print("emission at turning point:", param[0]/1e9, "+/-", sigma[0]/1e9)
 print("emission rate:", param[1], "+/-", sigma[1])
 
-import err_ranges as err
-year = np.arange(1990, 2020)
+#predicting the years
+year = np.arange(1990, 2030)
 forecast = logistic(year, *param)
-low, up = err.err_ranges(year, logistic, param, sigma)
 
+'''
+Visualizing  the values of the student enrolment from your 1960 to 2030 with plot
+'''
 plt.figure()
-plt.plot(readdata3["Year"], readdata3["emission"], label="GDP")
+plt.plot(readdata3["Year"], readdata3["emission"], label="Greenhouse Emission")
 plt.plot(year, forecast, label="forecast")
-plt.fill_between(year, low, up, color="yellow", alpha=0.7)
-plt.xlabel("year")
-plt.ylabel("GDP")
+plt.title('Prediction of Green House Emission from 1990 to 2030')
+plt.xlabel("Year")
+plt.ylabel("Green House Emission")
+plt.legend()
+plt.show()
+
+import err_ranges as err
+
+low, up = err.err_ranges(year, logistic, param, sigma)
+plt.figure()
+plt.plot(readdata3["Year"], readdata3["emission"], label="Greenhouse Emission")
+plt.plot(year, forecast, label="forecast")
+plt.fill_between(year, low, up, color="greenyellow", alpha=0.7)
+plt.xlabel("Year")
+plt.ylabel("Green House Emission")
 plt.legend()
 plt.show()
